@@ -24,7 +24,9 @@ describe("Lifecycle", () => {
 
         class Tag extends Element {
             static get props() {
-                return ["prop-1"];
+                return {
+                    "prop-1": String
+                };
             }
             elementMount() {
                 assert.equal(this.props.prop1, value);

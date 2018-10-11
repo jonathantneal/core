@@ -32,7 +32,9 @@ customElements.define(
    "atom-hello",
    class extends Element {
        static get props() {
-           return ["text"];
+           return {
+               text : String
+           };
        }
        render() {
            return <h1>hello {this.props.text}</h1>;
@@ -55,7 +57,9 @@ customElements.define(
            this.attachShadow({ mode: "open" });
        }
        static get props() {
-           return ["text"];
+           return {
+               text : String
+           };
        }
        styled() {
            return `
@@ -181,7 +185,14 @@ customElements.define(
    "atom-hello",
    class extends Element {
        static get props() {
-           return ["click"];
+           return {
+               click(value){
+                   if(typeof value === "function"){
+                       return value;
+                   }
+                   throw "the click property must be a function"
+               }
+           };
        }
        render() {
            return <button click={() => {
@@ -210,6 +221,18 @@ The objective of this behavior is to allow a more efficient communication betwee
 ## Observing the addEventListener method
 
 This method is optimized, to eliminate all the listeners associated with the component once the component has been removed from the document.
+
+## The host tag is added
+
+This tag allows you to point to the root component, in this way you can interact with the component as if it were a virtual node
+
+```js
+render(){
+    return <host style={{display:"block",width:"100%",height:"100%"}}>
+        <slot name="header"/>
+    </host>
+}
+```
 
 ## Examples
 
