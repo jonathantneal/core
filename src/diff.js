@@ -11,14 +11,16 @@ import { VDom, h, isDom } from "./vdom";
  * @param {Object} [collect] -It allows to recover properties, avoiding in turn the analysis
  *                            of these on the node, these are returned in an object in association
  *                            with the key of the loop
+ * @param {Boolean} [nextMerge] - it allows not to eliminate the properties of the previous state and add them to the next state
  * @return {Object} Collected properties
  */
-export function diffProps(node, prev, next, svg, collect) {
+export function diffProps(node, prev, next, svg, collect, nextMerge) {
     // generates a list of the existing attributes in both versions
     let keys = Object.keys(prev).concat(Object.keys(next)),
+        length = keys.length,
         props = {};
 
-    for (let i = 0; i < keys.length; i++) {
+    for (let i = 0; i < length; i++) {
         let prop = keys[i];
         if (prev[prop] !== next[prop]) {
             /**
@@ -39,9 +41,14 @@ export function diffProps(node, prev, next, svg, collect) {
                 if ((prop in node && !svg) || (svg && prop === "style")) {
                     if (prop === "style") {
                         if (typeof next[prop] === "object") {
-                            for (let index in next[prop]) {
-                                node.style[index] = next[prop][index];
+                            let prevStyle = prev[prop] || {},
+                                nextStyle = next[prop];
+                            for (let index in nextStyle) {
+                                if (prevStyle[index] !== nextStyle[index]) {
+                                    node.style[index] = nextStyle[index];
+                                }
                             }
+                            next[prop] = { ...prevStyle, ...nextStyle };
                         } else {
                             node.style.cssText = next[prop];
                         }
@@ -55,7 +62,11 @@ export function diffProps(node, prev, next, svg, collect) {
                         : node.setAttribute(prop, next[prop]);
                 }
             } else {
-                node.removeAttribute(prop);
+                if (nextMerge) {
+                    next[prop] = prev[prop];
+                } else {
+                    node.removeAttribute(prop);
+                }
             }
         }
     }
@@ -91,64 +102,58 @@ function slot(vdom, slots) {
 export function diff(parent, prevNode, next, slots = {}, svg) {
     let prev = prevNode && prevNode[MASTER] ? prevNode[MASTER] : new VDom(),
         nextNode = prevNode,
-        master = next,
-        dom;
+        nextMaster = next;
     if (next) {
         next = slot(next, slots);
         prev = slot(prev, slots);
         svg = svg || next.tag === "svg";
-        dom = isDom(next.tag);
+
         if (parent) {
             if (prev.tag !== next.tag) {
-                if (dom) {
-                    nextNode = next.tag;
-                    prevNode
-                        ? replace(parent, nextNode, prevNode)
-                        : append(parent, nextNode);
-                } else if (next.tag) {
-                    nextNode = svg
-                        ? document.createElementNS(
-                              "http://www.w3.org/2000/svg",
-                              next.tag
-                          )
-                        : document.createElement(next.tag);
-                    if (prevNode) {
-                        replace(parent, nextNode, prevNode);
-                        if (!nextNode[ELEMENT]) {
-                            while (prevNode.firstChild) {
-                                append(nextNode, prevNode.firstChild);
-                            }
-                        }
-                    } else {
-                        append(parent, nextNode);
+                nextNode = isDom(next.tag)
+                    ? next.tag
+                    : next.tag
+                        ? svg
+                            ? document.createElementNS(
+                                  "http://www.w3.org/2000/svg",
+                                  next.tag
+                              )
+                            : document.createElement(next.tag)
+                        : document.createTextNode("");
+                if (prevNode) {
+                    replace(parent, nextNode, prevNode);
+                    while (!nextNode[ELEMENT] && prevNode.firstChild) {
+                        append(nextNode, prevNode.firstChild);
                     }
                 } else {
-                    nextNode = document.createTextNode("");
-                    if (prev.tag) {
-                        replace(parent, nextNode, prevNode);
-                    } else {
-                        append(parent, nextNode);
-                    }
+                    append(parent, nextNode);
                 }
             }
         }
         if (nextNode.nodeType === 3) {
-            if (prev.children !== next.children)
-                nextNode.textContent = next.children;
+            if (prev.children[0] !== next.children[0])
+                nextNode.textContent = next.children[0];
         } else {
-            let isElement = nextNode[Element],
+            let collect = parent && nextNode[ELEMENT] && nextNode._props.keys,
                 props = diffProps(
                     nextNode,
                     prev.props,
                     next.props,
                     svg,
-                    isElement && nextNode._props.keys
+                    /**
+                     * It allows to obtain properties of the iteration of diff by properties
+                     */
+                    collect,
+                    /**
+                     * This allows not to delete the previous state and keep it in the next state
+                     */
+                    collect
                 );
-            if (isElement) {
+            if (nextNode[ELEMENT] && parent) {
                 props.children = next.children.map(
                     vdom => (vdom.tag ? vdom : vdom.children)
                 );
-                this.setProperties(props);
+                nextNode.setProperties(props);
             } else {
                 if (nextNode) {
                     let children = Array.from(nextNode.childNodes),
@@ -168,9 +173,9 @@ export function diff(parent, prevNode, next, slots = {}, svg) {
                 }
             }
         }
-        nextNode[MASTER] = master;
     } else {
         if (parent && prevNode) remove(parent, prevNode);
     }
+    nextNode[MASTER] = nextMaster;
     return parent;
 }
