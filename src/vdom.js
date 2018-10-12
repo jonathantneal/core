@@ -48,8 +48,8 @@ export function concat(children, merge = []) {
                   isVDom(child)
                       ? child
                       : isDom(child)
-                          ? new VDom(child, {}, "")
-                          : new VDom("", {}, child || "")
+                          ? new VDom(child, {}, [""])
+                          : new VDom("", {}, [child || ""])
               );
     }
     return merge;
