@@ -1,7 +1,7 @@
 import { ELEMENT, MASTER } from "./constants";
 import { h, isVDom } from "./vdom";
 import { diff } from "./diff";
-import { defer, camelCase, append } from "./utils";
+import { defer, camelCase, append, getProps } from "./utils";
 
 export default class extends HTMLElement {
     constructor() {
@@ -11,27 +11,22 @@ export default class extends HTMLElement {
 
         this.slots = {};
         this.props = {};
+        this.isMount = false;
         this.preventRender = true;
         this.content = document.createDocumentFragment();
 
-        this.class = this.constructor;
-        this._props = {
-            keys: this.class.observedAttributes,
-            types: this.class.props
-        };
+        this._class = this.constructor;
+        this._name = this.tagName.toLocaleLowerCase();
+        this._props = getProps(this._class.props);
     }
     static get props() {
         return {};
     }
     static get observedAttributes() {
-        return Object.keys(this.props).concat("children");
-    }
-    get isMount() {
-        return this[MASTER];
+        return getProps(this.props).keys;
     }
     connectedCallback() {
         defer(() => {
-            let children = [];
             while (this.firstChild) {
                 let child = this.firstChild,
                     slot = child.getAttribute && child.getAttribute("slot");
@@ -41,9 +36,11 @@ export default class extends HTMLElement {
                 append(this.content, child);
                 children.push(child);
             }
-            this.setProperties({ children });
             this.preventRender = false;
-            this.setState({});
+            this.setState({}, () => {
+                this.isMount = true;
+                this.elementMount();
+            });
         });
     }
     setAttribute(prop, value) {
@@ -81,24 +78,28 @@ export default class extends HTMLElement {
     disconnectedCallback() {
         this.elementMount();
     }
-    setState(state) {
+    setState(state, watch) {
         if (typeof state !== "object") return;
         this.state = { ...this.state, ...state };
         if (this.preventRender) return;
         this.preventRender = true;
         defer(() => {
-            let render = this.render(),
-                isMount = this.isMount;
-            render =
-                isVDom(render) && render.tag === "host" ? (
-                    render
-                ) : (
-                    <host>{render}</host>
+            let render = this.render();
+
+            if (isVDom(render)) {
+                let isHost = render.tag === "host";
+                render = h(
+                    this._name,
+                    isHost ? render.props : {},
+                    isHost ? render.children : render
                 );
+            } else {
+                render = h(this._name, {}, render);
+            }
 
             diff(false, this, render, this.slots);
             this.preventRender = false;
-            isMount ? this.elementUpdate() : this.elementMount();
+            watch ? watch() : this.elementUpdate();
         });
     }
     elementMount() {}
