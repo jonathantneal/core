@@ -44,4 +44,30 @@ describe("Lifecycle", () => {
         tag.setAttribute("prop-1", value);
         document.body.appendChild(tag);
     });
+
+    it("elementMount force children", done => {
+        let value = "hello!";
+
+        class Tag extends Element {
+            elementMount() {
+                assert.equal(this.props.children.length, 0);
+                done();
+            }
+            render() {
+                return <div>hola!</div>;
+            }
+        }
+
+        customElements.define("tag-test-3", Tag);
+
+        let tag = document.createElement("tag-test-3");
+
+        tag.innerHTML = `
+                <p>1</p>
+                <p>2</p>
+                <p>3</p>
+                <p>4</p>
+            `;
+        document.body.appendChild(tag);
+    });
 });

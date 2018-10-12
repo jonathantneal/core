@@ -10,7 +10,7 @@ export default class extends HTMLElement {
         this[ELEMENT] = true;
 
         this.slots = {};
-        this.props = {};
+        this.props = { children: [] };
         this.isMount = false;
         this.preventRender = true;
         this.content = document.createDocumentFragment();
@@ -34,7 +34,6 @@ export default class extends HTMLElement {
                     this.slots[slot] = child;
                 }
                 append(this.content, child);
-                children.push(child);
             }
             this.preventRender = false;
             this.setState({}, () => {
