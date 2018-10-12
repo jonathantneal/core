@@ -135,25 +135,6 @@ export default class extends Element {
 
 Atomico gives you various ways to communicate the web-component with the document, for example by using:
 
-### children
-
-The Atomico diff algorithm tolerates working with real nodes, so for example you can use the `childNodes` using` this.props.children`.
-
-```html
-<atom-hello>
-   <span>😃</span>
-</atom-hello>
-```
-
-Example of using `this.props.children` within render.
-
-```javascript
-render(){
-   return <div>{this.props.children}</div>
-}
-```
-
-> These children are not clones, they are direct instances, if you want to repeat a node extracted from the document you should use `cloneNode` on the node.
 
 ### Slot
 
@@ -167,6 +148,8 @@ This is a virtual tag capable of importing a node from `this.slots`
 
 These nodes are only imported at the time of mount of the component
 
+
+
 ```javascript
 render(){
    return <div><slot name="emoji"/></div>
@@ -174,6 +157,22 @@ render(){
 ```
 
 > These children are not clones, they are direct instances, if you want to repeat a node extracted from the document you should use `cloneNode` on the node.
+
+
+### tag host
+
+Sometimes you will seek to control the state of the root node, Atomico allows that by using the `<host>` tag that points to the same component.
+
+```js
+render(){
+   return <host style={{background:"teal"}}>
+       <h1>hello!</h1> 
+   </host>
+}
+```
+
+> thanks to host you can add the property background: "teal" `, to the root node.
+
 
 ### setAttribute
 
@@ -222,17 +221,7 @@ The objective of this behavior is to allow a more efficient communication betwee
 
 This method is optimized, to eliminate all the listeners associated with the component once the component has been removed from the document.
 
-## The host tag is added
 
-This tag allows you to point to the root component, in this way you can interact with the component as if it were a virtual node
-
-```js
-render(){
-    return <host style={{display:"block",width:"100%",height:"100%"}}>
-        <slot name="header"/>
-    </host>
-}
-```
 
 ## Examples
 

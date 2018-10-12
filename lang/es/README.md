@@ -4,7 +4,6 @@ Esta pequeña librería le permite crear web-components distribuibles en cualqui
 
 1. [**Classes**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes)
 2. [**Custom Elements**](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements)
-3. [**Custom Events**](https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Creating_and_triggering_events)
 
 ## Primeros pasos
 
@@ -40,6 +39,8 @@ customElements.define(
 );
 
 ```
+
+> `static get props` tambien puede ser un objeto indice y funcion, atomico envia a la funcion la propiedad entrante.
 
 ### 2. Añadiendo estilo a nuestro primer componente
 
@@ -105,7 +106,7 @@ El ciclo de vida de Atomico se compone de construcción de componente, montaje d
 
 Esta función recibe 2 argumentos :
 1. props : Son las nuevas propiedad a compartir dentro del componente
-2. changes : Son las propiedades que han cambiado al momento de la ejecución de `this.setProps`.
+2. changes : Son las propiedades que han cambiado al momento de la ejecución de `this.setProperties`.
 
 > Ud puede retornar `false`, para evitar la actualización provocada por las nuevas propiedades.
 
@@ -130,23 +131,6 @@ export default class extends Element {
 
 Atomico le entrega diversas formas de comunicar el web-component con el documento, sea por ejemplo mediante el uso de :
 
-### children
-
-El algoritmo de diff de atomico tolera el trabajo con nodos reales, por lo que  ud por ejemplo ud podrá hacer uso de los `childNodes` mediante `this.props.children`.
-
-```html
-<atom-hello>
-   <span>😃</span>
-</atom-hello>
-```
-Uso de `this.props.children` dentro de render.
-```javascript
-render(){
-   return <div>{this.props.children}</div>
-}
-```
-
-> Estos nodos no son clones, son instancias directas, si ud busca repetir un nodo extraído desde el documento deberá usar cloneNode sobre el nodo.
 
 ### Slot
 
@@ -167,6 +151,21 @@ render(){
 ```
 
 >  Estos nodos no son clones, son instancias directas, si ud busca repetir un nodo extraído desde el documento debera usar cloneNode sobre el nodo.
+
+### tag host
+
+En ocasiones ud buscará controlar el estado del nodo de raíz, atomico permite eso mediante el uso del tag `<host>` que apunta al mismo componente.
+
+```js
+render(){
+   return <host style={{background:"teal"}}>
+       <h1>hello!</h1> 
+   </host>
+}
+```
+
+> gracias a host ud podrá añadir la propiedad `background:"teal"`, al nodo de raíz.
+
 
 ### setAttribute
 
