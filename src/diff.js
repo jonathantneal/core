@@ -137,7 +137,7 @@ export function diff(parent, prevNode, next, slots = {}, svg) {
             let collect = parent && nextNode[ELEMENT] && nextNode._props.keys,
                 props = diffProps(
                     nextNode,
-                    prev.props,
+                    next.tag === prev.tag ? prev.props : {},
                     next.props,
                     svg,
                     /**
@@ -177,5 +177,5 @@ export function diff(parent, prevNode, next, slots = {}, svg) {
         if (parent && prevNode) remove(parent, prevNode);
     }
     nextNode[MASTER] = nextMaster;
-    return parent;
+    return nextNode;
 }
