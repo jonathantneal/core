@@ -1,6 +1,6 @@
 {
   "name": "atomico",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "A small library to work with web components",
   "main": "dist/atomico.js",
   "umd:main": "dist/atomico.umd.js",
@@ -16,7 +16,7 @@
     "watch": "rollup -c -w",
     "build": "rollup -c",
     "test": "karma start --single-run --browsers ChromeHeadless karma.conf.js",
-    "prepublish" : "npm test"
+    "prepare" : "npm run build && npm test"
   },
   "devDependencies": {
     "chai": "^4.2.0",
