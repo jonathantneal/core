@@ -42,6 +42,12 @@ export default class extends HTMLElement {
             });
         });
     }
+    disconnectedCallback() {
+        this.elementUnmount();
+    }
+    attributeChangedCallback(index, prev, next) {
+        this.setProperties({ [index]: next });
+    }
     setAttribute(prop, value) {
         if (this._props.keys.indexOf(prop) > -1) {
             this.setProperties({ [prop]: value });
@@ -70,12 +76,6 @@ export default class extends HTMLElement {
             this.props = { ...this.props, ...nextProps };
             if (prevent) this.setState({});
         }
-    }
-    attributeChangedCallback(index, prev, next) {
-        this.setProperties({ [index]: next });
-    }
-    disconnectedCallback() {
-        this.elementMount();
     }
     setState(state, watch) {
         if (typeof state !== "object") return;
