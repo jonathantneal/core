@@ -1,6 +1,6 @@
 {
   "name": "atomico",
-  "version": "0.4.4",
+  "version": "0.5.0",
   "description": "A small library to work with web components",
   "main": "dist/atomico.js",
   "umd:main": "dist/atomico.umd.js",
@@ -21,6 +21,8 @@
   "devDependencies": {
     "@babel/core": "^7.1.2",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
+    "@babel/plugin-transform-react-jsx": "^7.0.0",
+    "atomico-diff": "^0.1.0",
     "chai": "^4.2.0",
     "karma": "^3.0.0",
     "karma-chai": "^0.1.0",
@@ -34,8 +36,5 @@
     "rollup-plugin-filesize": "^4.0.1",
     "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-terser": "^1.0.1"
-  },
-  "dependencies": {
-    "atomico-diff": "^0.0.9"
   }
 }
