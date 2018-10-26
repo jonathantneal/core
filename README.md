@@ -34,24 +34,24 @@ You can listen to certain properties associated with your component, each time y
 You can use an array to define which properties you will observe.
 
 ```js
-   static get props(){
-       return [
-           "property-one", // this.props.propertyOne
-           "property-two"  // this.props.propertyTwo
-       ]
-   }
+static get props(){
+    return [
+        "property-one", // this.props.propertyOne
+        "property-two"  // this.props.propertyTwo
+    ]
+}
 ```
 
 You can use an object to define which properties you will observe, each property will be associated with a function, this function will be executed when defining the property.
 
 ```js
-   static get props(){
-       return {
-           "property-one":Number, // this.props.propertyOne
-           "property-two":String,  // this.props.propertyTwo
-           "property-json":JSON.parse // this.props.propertyJson
-       }
-   }
+static get props(){
+    return {
+        "property-one":Number, // this.props.propertyOne
+        "property-two":String,  // this.props.propertyTwo
+        "property-json":JSON.parse // this.props.propertyJson
+    }
+}
 ```
 
 ## Atomico ❤️ JSX
@@ -117,7 +117,9 @@ The Virtual-dom of Atomico does not support:
 | onUpdated | After the render execution | It is recommended to analyze the state of the dom, after each update |
 | onUnmounted | After the component has been removed from the document | Useful for the elimination of global events |
 
-## Shadow dom
+## Element
+
+### Shadow-dom
 
 By default Atomico works on the shadow-dom whenever you enable it.
 
@@ -127,7 +129,21 @@ constructor(){
 }
 ```
 
-## setAttribute
+
+### preventRender
+
+Atomico uses an asynchronous render, every time a render is executed it is defined as true `this.preventRender`, this prevents the render function from being used again. You can define it as true to avoid rendering the view again.
+
+### content
+
+By using `this.content`, you will get the node that encapsulates the content within the component.
+
+### slots
+
+The slots property, stores the nodes taken at the time of component mount you can create your own slot manually associating index to an HTMLELement.
+
+
+### setAttribute
 
 Atomico captures the use of setAttribute, associated with the component, to send the update object to `setProperties`, only if the index matches a property of` static get props`
 
@@ -136,13 +152,16 @@ document.querySelector("my-tag").setAttribute("my-prop",{});
 ```
 The biggest advantage of using `setAttribute` is the transfer in **raw** of the value associated with the property.
 
-## Contextos
+### Contextos
 
 Using the `getContext` method, the diff process recovers the return to share a context between components.
 
 ```js
 getContext(context = {}){
    return {...context,message:"context!"};
+}
+render(){
+    return <h1>{this.context.message}</h1>
 }
 ```
 

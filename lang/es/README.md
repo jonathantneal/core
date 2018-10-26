@@ -33,24 +33,24 @@ ud puede escuchar ciertas propiedad asociadas a su componente, cada vez que se a
 Ud puede usar una array para definir cuáles propiedades ud observará.
 
 ```js
-   static get props(){
-       return [
-           "property-one", // this.props.propertyOne
-           "property-two"  // this.props.propertyTwo
-       ]
-   }
+static get props(){
+    return [
+        "property-one", // this.props.propertyOne
+        "property-two"  // this.props.propertyTwo
+    ]
+}
 ```
 
 ud puede usar un array para definir cuáles propiedades ud observará, cada propiedad estará asociada a una función, esta función será ejecutada al definir la propiedad.
 
 ```js
-   static get props(){
-       return {
-           "property-one":Number, // this.props.propertyOne
-           "property-two":String,  // this.props.propertyTwo
-           "property-json":JSON.parse // this.props.propertyJson
-       }
-   }
+static get props(){
+    return {
+        "property-one":Number, // this.props.propertyOne
+        "property-two":String,  // this.props.propertyTwo
+        "property-json":JSON.parse // this.props.propertyJson
+    }
+}
 ```
 
 ## Atomico ❤️ JSX
@@ -116,7 +116,9 @@ El Virtual-dom de Atomico no soporta:
 | onUpdated | Luego de la ejecución de render | Se recomienda para analizar el estado del dom, luego de cada actualización |
 | onUnmounted | Luego de que el componente ha sido eliminado del documento | Util para la eliminación de eventos globales |
 
-## Shadow dom
+## Element
+
+### Shadow-dom
 
 Por defecto Atomico trabajara sobre el shadow dom siempre que ud lo habilite.
 
@@ -126,7 +128,19 @@ constructor(){
 }
 ```
 
-## setAttribute
+### preventRender
+
+Atomico utiliza un render asíncrono, cada vez que se ejecuta un render se define como verdadero `this.preventRender`, esto evita que se utilice nuevamente la función render. ud puede definir como verdadero para evitar renderizar la vista nuevamente.
+
+### content
+
+Mediante el uso de `this.content`, ud obtendrá el nodo que encapsula el contenido dentro del componente.
+
+### slots
+
+La propiedad slots, almacena los nodos tomados al momento del montaje del componente ud puede crear sus propios slot de forma manual asociando índice a un HTMLELement.
+
+### setAttribute
 
 Atomico capta el uso de setAttribute, asociado al componente, para así enviar a `setProperties`, el objeto de actualización, sólo si el índice coincide con una propiedad de `static get props`
 
@@ -135,13 +149,16 @@ document.querySelector("my-tag").setAttribute("my-prop",{});
 ```
 La mayor ventaja del uso de `setAttribute` es el traspaso en **raw** del valor asociado la propiedad.
 
-## Contextos
+### Contextos
 
 Mediante el método `getContext`, el proceso de diff, recupera el retorno para así compartir un contexto entre componentes.
 
 ```js
 getContext(context = {}){
    return {...context,message:"context!"};
+}
+render(){
+    return <h1>{this.context.message}</h1>
 }
 ```
 
