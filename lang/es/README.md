@@ -1,216 +1,138 @@
-<img src="../../brand/logo.png" width="280px"/>
+<img src="brand/logo.png" width="280px"/>
 <br/>
-Esta pequeña librería le permite crear web-components distribuibles en cualquier entorno que soporte:
 
-1. [**Classes**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes)
-2. [**Custom Elements**](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements)
+Una pequeña librería para crear web-components a base de JSX, [Ver Instalación](#Instalacion).
 
-## Primeros pasos
-
-Si quiere lograr un componente altamente distribuible lo invitó a experimentar instalando [**cli-bone**](https://github.com/uppercod/cli-bone).
-
-### 0. Instalacion
-
-**Cli-bone**, lo desarrollé con el propósito de descargar repositorios GIT como plantillas, Bone es responsable de reemplazar nombres de carpetas y archivos.
-
-```bash
-## fist install cli-bone
-npm install -g cli-bone
-## run command
-bone uppercod/atomico.template
-```
-
-Gracias al uso  **Atomico** y **Rollup**, se podra empaquetar su componente para luego ser compartido por ejemplo en **Github**, **Npm** o [**unpkg.com**](https://unpkg.com)
-
-### 1. Creando nuestro primer componente
-
-```javascript
+```js
 import { h, Element } from "atomico";
+
 customElements.define(
-   "atom-hello",
-   class extends Element {
-       static get props() {
-           return ["text"];
-       }
-       render() {
-           return <h1>hello {this.props.text}</h1>;
-       }
-   }
-);
-
-```
-
-> `static get props` tambien puede ser un objeto indice y funcion, atomico envia a la funcion la propiedad entrante.
-
-### 2. Añadiendo estilo a nuestro primer componente
-
-El uso del [Shadow Dom](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_shadow_DOM) es opcional,  pero en este ejemplo usaremos directamente Shadow Dom, para lograr encapsular el contexto del estilo dentro del  componente. ud solo deberá definir `this.attachShadow({ mode: "open" })`en el constructor.
-
-```javascript
-import { h, Element } from "atomico";
-customElements.define(
-   "atom-hello",
-   class extends Element {
-       constructor() {
-           this.attachShadow({ mode: "open" });
-       }
-       static get props() {
-           return ["text"];
-       }
-       styled() {
-           return `
-               h1{
-                   font-size : 30px;
-               }
-           `;
-       }
-       render() {
-           return <h1>
-               <style>{this.styled()}</style>
-               hello {this.props.text}
-           </h1>;
-       }
-   }
+    "my-tag",
+    class extends Element {
+        render() {
+            return (
+                <host
+                    click={() => {
+                        this.setState({
+                            toggle: !this.state.toggle
+                        });
+                    }}
+                >
+                    {this.state.toggle ? "🚀" : "🔥"}
+                </host>
+            );
+        }
+    }
 );
 ```
+## Atomico ❤️ JSX
 
-### 3. Visualizar el componente
+Si ud busca trabajar con Atomico le comentó con anterioridad elementos interesantes del virtual-dom de Atomico.
 
-Ud puede ver su componente importado como script, para visualizar su comportamiento.
+### Propiedad como eventos
 
-```html
-<body>
-   <!--component-->
-   <atom-hello></atom-hello>
-   <!--init:require-->
-   <script src="https://unpkg.com/atomico@0.3.4/dist/atomico.umd.js"></script>
-   <script src="dist/atom-hello.umd.js"></script>
-   <!--end:require-->
-</body>
-```
-
-## Ciclo de vida
-
-El ciclo de vida de Atomico se compone de construcción de componente, montaje del componente, actualización de propiedades, renderización y eliminación de componente.
-
-| Método              | Argumento         | Descripción                                                  |
-| ------------------- | ----------------- | ------------------------------------------------------------ |
-| Constructor         | Constructor       | Se ejecuta al momento de crear el componente, se recomienda definir todas las propiedades a utilizar dentro del constructor |
-| elementMount        | -- | Se ejecuta cuando el componente se ha añadido al documento y ha realizado su primer render. |
-| elementUpdate       | -- | Se ejecuta una vez lanzada la función render por setState, este ignora el primer render ya que este es recivido por elementMount. |
-| elementUnmount      | -- | Se ejecuta cuando el componente ya sea ha elimina del documento |
-| elementReceiveProps | props, changes | Se ejecuta cuando el componente actulizara las propiedades asociadas a `this.props` |
-
-
-### Observación elementReceiveProps
-
-Esta función recibe 2 argumentos :
-1. props : Son las nuevas propiedad a compartir dentro del componente
-2. changes : Son las propiedades que han cambiado al momento de la ejecución de `this.setProperties`.
-
-> Ud puede retornar `false`, para evitar la actualización provocada por las nuevas propiedades.
-
-## JSX
-
-El Jsx de Atomico se basa en la definición de tipo, por ejemplo si un atributo es una función esta será registrada como evento, en el caso contrario como atributo.
-
-```javascript
-import { h, Element } from "atomico";
-
-export default class extends Element {
-   render() {
-       return <button class="my-class" click={event => console.log(event)}>
-           hello ${this.state.title || "world"}
-       </button>;
-   }
-}
-
-```
-
-## Comunicación entre web-components y documento
-
-Atomico le entrega diversas formas de comunicar el web-component con el documento, sea por ejemplo mediante el uso de :
-
-
-### Slot
-
-Esta es una etiqueta virtual capaz de importar un nodo desde `this.slots`
-
-```html
-<atom-hello>
-   <span slot="emoji">😃</span>
-</atom-hello>
-```
-
-Estos nodos solo son importados al momento del montaje del componente
-
-```javascript
-render(){
-   return <div><slot name="emoji"/></div>
-}
-```
-
->  Estos nodos no son clones, son instancias directas, si ud busca repetir un nodo extraído desde el documento debera usar cloneNode sobre el nodo.
-
-### tag host
-
-En ocasiones ud buscará controlar el estado del nodo de raíz, atomico permite eso mediante el uso del tag `<host>` que apunta al mismo componente.
+Si una propiedad del tag sea ha definido como función, esta se registrará como un evento.
 
 ```js
 render(){
-   return <host style={{background:"teal"}}>
-       <h1>hello!</h1> 
-   </host>
+  return <button click={this.handlerClick}>🤷</button>
+}
+```
+> Esto es útil si ud busca trabajar con custom-events, ya que Atomico no muta en nombre del evento.
+
+### Tag Slot
+
+El tag `<slot name="any"/>`, le permite interactuar con nodos reales, por defecto Atomico obtiene los slot al momento de montar el componente.
+
+```html
+<my-tag>
+    <img slot="image"/>
+</my-tag>
+```
+Ud puede interactuar con estos slot por medio del virtual-dom
+```js
+render(){
+  return <slot name="image" src="my-image.jpg" click={this.handlerClick}/>
+}
+```
+>La interacción de Atomico solo se limita a la definición de propiedades.
+
+### Tag host
+
+El tag `<host/>` representa al mismo componente, esto es útil para manipular el estado de la etiqueta de raíz.
+
+```js
+render(){
+  return <host style={{background:"black",color:"white",display:"block"}}>
+      {this.is}
+  </host>
 }
 ```
 
-> gracias a host ud podrá añadir la propiedad `background:"teal"`, al nodo de raíz.
+### Observaciones adicionales
+
+El Virtual-dom de Atomico no soporta:
+
+1. **ref** : Ud puede usar `this.content.querySelector("selector")`, para lograr un efecto similar.
+2. **key** : Aunque algunos consideran una buena práctica el uso de key en el manejo de listas, como autor de Atomico no las considero de uso frecuente como para brindarle soporte dentro de Atomico.
+3. **fragmentos**:`</>` Ud no necesitara usar fragmentos ya que el web-componente es y sera siempre su raiz.
+
+## Ciclo de vida
 
 
-### setAttribute
+| Metodo | Ejecución | Observación |
+|:-------|:----------|:----|
+| constructor | -- | Util para la definición de un estado inicial |
+| onMounted | luego del primer render | Útil para la realizacion de llamadas asíncronas o suscribcion de eventos |
+| onUpdate(props:Object) | Cada vez que se modifica una propiedad asociada a `static get props` | Si este método retorna `false` previene la ejecución de render |
+| onUpdated | Luego de la ejecución de render | Se recomienda para analizar el estado del dom, luego de cada actualización |
+| onUnmounted | Luego de que el componente ha sido eliminado del documento | Util para la eliminación de eventos globales |
 
-Si ud ha utilizado `static get props` para la definición de las propiedades asociadas al componente. cambia el comportamiento de esta función a beneficio del componente.
+## Shadow dom
 
-```javascript
-import { h, Element } from "atomico";
-customElements.define(
-   "atom-hello",
-   class extends Element {
-       static get props() {
-           return ["click"];
-       }
-       render() {
-           return <button click={() => {
-                   this.props.click();
-               }}>
-               hello
-           </button>;
-       }
-   }
-);
+Por defecto Atomico trabajara sobre el shadow dom siempre que ud lo habilite.
+
+```js
+constructor(){
+  this.attachShadow({mode:"open"});
+}
 ```
 
-Este comportamiento solo funciona dentro de Atomico
+## setAttribute
 
-```javascript
-let tag = document.querySelector("atom-hello");
+Atomico capta el uso de setAttribute, asociado al componente, para así enviar a `setProperties`, el objeto de actualización, sólo si el índice coincide con una propiedad de `static get props`
 
-   tag.setAttribute("click",()=>{
-       console.log("ok!")
-   })
+```js
+document.querySelector("my-tag").setAttribute("my-prop",{});
+```
+La mayor ventaja del uso de `setAttribute` es el traspaso en **raw** del valor asociado la propiedad.
+
+## Instalacion
+
+### Instalacion de bone-cli
+Inicializar una estructura para comenzar con Atomico
+```js
+npm install -g cli-bone
+```
+### Crear componente
+Descarga desde github, el esqueleto para comenzar con Atomico
+```js
+bone uppercod/Atomico.template
+```
+### yarn o npm install
+El comando anterior generará una carpeta, ingrese a ella e instale las dependencias.
+
+### script
+
+Permite la generación del bundle que agrupa el componente, para visualizar el componente solo abra `ìndex.html` en el directorio del componente.
+
+```sh
+# watch
+npm run watch
+# build
+npm run build
+# publish
+npm publish
 ```
 
-El objetivo de este comportamiento es permitir una comunicación más eficiente entre la definición de propiedades y el web-component, por ejemplo si ud  llama el componente desde react, preact o vue podrá comunicarle al componente valores en raw, ejemplo objetos, booleanos, números o funciones.
-
->  Se advierte que si el componente se carga antes que la carga del documento, sea por ejemplo insertar el script que crea el componente en el head  permitirá una renderizacion pero no poseerá acceso a los nodos asociados a los impreso dentro del documento, por lo que ud no podrá usar `{this.props.children}` o `<slot name="sample"/>`. 
-
-## Observación del método addEventListener
-
-Este método está optimizado, para eliminar todos los listeners asociados al componente una vez que el componente se ha desmontado del documento.
-
-## Ejemplos
-
-| Titulo | link | 
-|-------|------|
-| atomico-todo | [github](https://github.com/uppercod/atomico-todo)|
-| atom-google-map | [github](https://github.com/atomicojs/atom-google-map)|
+El componente generado con `uppercod/atomico.template`, posee la configuración para ser compartido en **npm** o **github**, recuerde revisar `package.json` antes de publicar.
