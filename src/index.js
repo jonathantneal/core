@@ -1,4 +1,4 @@
-import { h, diff, isVDom, Collect } from "atomico-diff";
+import { h, diff, isVDom, Collect, Context } from "atomico-diff";
 import { getProps, defer, camelCase } from "./utils";
 
 export { h } from "atomico-diff";
@@ -13,6 +13,7 @@ export class Element extends HTMLElement {
         this.is = this.nodeName.toLocaleLowerCase();
         this._props = getProps(this.constructor.props);
         new Collect(this, this._props.keys, props => this.setProperties(props));
+        new Context(this, context => this.getContext(context));
     }
     get content() {
         return this.shadowRoot || this;
@@ -61,7 +62,7 @@ export class Element extends HTMLElement {
                     ? render
                     : h("host", {}, render);
 
-            diff(false, this, render.clone(this.is), this.slots);
+            diff(false, this, render.clone(this.is), this.slots, this.context);
             this.preventRender = false;
             watch ? watch() : this.onUpdated();
         });
@@ -90,6 +91,7 @@ export class Element extends HTMLElement {
     attributeChangedCallback(index, prev, next) {
         if (prev !== next) this.setProperties({ [index]: next });
     }
+    getContext() {}
     onMounted() {}
     onUpdate() {}
     onUnmounted() {}
