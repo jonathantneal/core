@@ -27,13 +27,6 @@ export default {
     ],
     plugins: [
         resolve(),
-        // buble({
-        //     jsx: "h",
-        //     transforms: {
-        //         classes: false
-        //     },
-        //     objectAssign: "Object.assign"
-        // }),
         babel({
             plugins: [
                 [
