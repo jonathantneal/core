@@ -135,6 +135,19 @@ document.querySelector("my-tag").setAttribute("my-prop",{});
 ```
 La mayor ventaja del uso de `setAttribute` es el traspaso en **raw** del valor asociado la propiedad.
 
+## Contextos
+
+Mediante el método `getContext`, el proceso de diff, recupera el retorno para así compartir un contexto entre componentes.
+
+```js
+getContext(context = {}){
+   return {...context,message:"context!"};
+}
+```
+
+> El contexto puede ser cualquier valor que apruebe la siguiente expresión `getContext(context)||context`;
+
+
 ## Instalacion
 
 ### Instalacion de bone-cli
