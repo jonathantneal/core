@@ -25,6 +25,34 @@ customElements.define(
     }
 );
 ```
+
+## Observar propiedades
+
+ud puede escuchar ciertas propiedad asociadas a su componente, cada vez que se actualice una de esta propiedades se llamará al método `onUpdate`.
+
+Ud puede usar una array para definir cuáles propiedades ud observará.
+
+```js
+   static get props(){
+       return [
+           "property-one", // this.props.propertyOne
+           "property-two"  // this.props.propertyTwo
+       ]
+   }
+```
+
+ud puede usar un array para definir cuáles propiedades ud observará, cada propiedad estará asociada a una función, esta función será ejecutada al definir la propiedad.
+
+```js
+   static get props(){
+       return {
+           "property-one":Number, // this.props.propertyOne
+           "property-two":String,  // this.props.propertyTwo
+           "property-json":JSON.parse // this.props.propertyJson
+       }
+   }
+```
+
 ## Atomico ❤️ JSX
 
 Si ud busca trabajar con Atomico le comentó con anterioridad elementos interesantes del virtual-dom de Atomico.

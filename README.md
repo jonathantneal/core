@@ -26,6 +26,34 @@ customElements.define(
     }
 );
 ```
+
+## Observe properties
+
+You can listen to certain properties associated with your component, each time you update one of these properties the `onUpdate` method will be called.
+
+You can use an array to define which properties you will observe.
+
+```js
+   static get props(){
+       return [
+           "property-one", // this.props.propertyOne
+           "property-two"  // this.props.propertyTwo
+       ]
+   }
+```
+
+You can use an object to define which properties you will observe, each property will be associated with a function, this function will be executed when defining the property.
+
+```js
+   static get props(){
+       return {
+           "property-one":Number, // this.props.propertyOne
+           "property-two":String,  // this.props.propertyTwo
+           "property-json":JSON.parse // this.props.propertyJson
+       }
+   }
+```
+
 ## Atomico ❤️ JSX
 
 If you are looking to work with Atomico, you have previously commented on interesting elements of Atomico's virtual-dom.
@@ -73,11 +101,6 @@ render(){
 ### Additional remarks
 
 The Virtual-dom of Atomico does not support:
-
-1. **ref** : Ud puede usar `this.content.querySelector("selector")`, para lograr un efecto similar.
-2. **key** : Aunque algunos consideran una buena práctica el uso de key en el manejo de listas, como autor de Atomico no las considero de uso frecuente como para brindarle soporte dentro de Atomico.
-3. **fragmentos**:`</>` Ud no necesitara usar fragmentos ya que el web-componente es y sera siempre su raiz.
-
 
 1. **ref**: You can use `this.content.querySelector("selector")`, to achieve a similar effect.
 2. **key**: Although some consider it a good practice to use key in list management, as the author of Atomico, I do not consider them to be of frequent use to provide support within Atomico.
