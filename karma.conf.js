@@ -12,12 +12,19 @@ module.exports = function(config) {
         },
         rollupPreprocessor: {
             plugins: [
-                require("rollup-plugin-buble")({
-                    jsx: "h",
-                    transforms: {
-                        classes: false
-                    },
-                    objectAssign: "Object.assign"
+                require("rollup-plugin-babel")({
+                    plugins: [
+                        [
+                            "@babel/plugin-proposal-object-rest-spread",
+                            { loose: true, useBuiltIns: true }
+                        ],
+                        [
+                            "@babel/plugin-transform-react-jsx",
+                            {
+                                pragma: "h"
+                            }
+                        ]
+                    ]
                 })
             ],
             output: {
