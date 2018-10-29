@@ -1,30 +1,37 @@
-import VDom from "./src/vdom";
-
 interface Slots{
     [key:string] : HTMLElement | SVGAElement
+}
+
+interface PropsKeys{
+    keys:String[],
+    types:Object
+}
+
+interface Props{
+    [key:string]:Function;
 }
 
 type Tag = String | HTMLElement | SVGAElement;
 
 declare module "atomico"{
-    export function h(tag:Tag,attrs:Object,...children:any):VDom
+    export function h(tag:Tag,attrs:Object,...children:any):Object
     export class Component extends HTMLElement{
         state:Object;
         props:Object;
-        _props:string[];
-        _render:VDom[];
-        _prevent:boolean;
-        _mount:boolean;
-        fragment : document.createDocumentFragment;
-        slots : Slots;
-        setAttribute(props:string,value:any):void;
-        connectedCallback():void;
-        disconnectedCallback():void;
-        attributeChangedCallback():void;
-        addEventListener(type:string,handler:Function,useCapture?:boolean):void;
-        dispatch(type:string,detail:any):void;
-        setState(next:Object,ignoreUpdate?:boolean):void;
-        setProps(props:Object):void;
-        render():Any;
+        slots:Slots;
+        preventRender:Boolean;
+        is:String;
+        _props:PropsKeys;
+        get content():HTMLElement;
+        static get props():String[]|Props;
+        setAttribute(prop:String,value:Any);
+        setProperties(props:Object);
+        setState(state:Object);
+        getContext(context:any):any;
+        onMounted();
+        onUpdate(props:Object):?Boolean;
+        onUpdated();
+        dispatch(type:string,detail:any);
+        render();
     }
 }
