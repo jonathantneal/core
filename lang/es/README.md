@@ -107,14 +107,13 @@ El Virtual-dom de Atomico no soporta:
 
 ## Ciclo de vida
 
-
 | Metodo | Ejecución | Observación |
 |:-------|:----------|:----|
-| constructor | -- | Util para la definición de un estado inicial |
-| onMounted | luego del primer render | Útil para la realizacion de llamadas asíncronas o suscribcion de eventos |
-| onUpdate(props:Object) | Cada vez que se modifica una propiedad asociada a `static get props` | Si este método retorna `false` previene la ejecución de render |
-| onUpdated | Luego de la ejecución de render | Se recomienda para analizar el estado del dom, luego de cada actualización |
-| onUnmounted | Luego de que el componente ha sido eliminado del documento | Util para la eliminación de eventos globales |
+| `constructor` | -- | Util para la definición de un estado inicial |
+| `onMounted` | luego del primer render | Útil para la realizacion de llamadas asíncronas o suscribcion de eventos |
+| `onUpdate(props:Object)` | Cada vez que se modifica una propiedad asociada a `static get props` | Si este método retorna `false` previene la ejecución de render |
+| `onUpdated` | Luego de la ejecución de render | Se recomienda para analizar el estado del dom, luego de cada actualización |
+| `onUnmounted` | Luego de que el componente ha sido eliminado del documento | Util para la eliminación de eventos globales |
 
 ## Element
 

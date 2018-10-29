@@ -108,14 +108,13 @@ The Virtual-dom of Atomico does not support:
 
 ## Lifecycle
 
-
 | Method | Execution | Observation |
 |:-------|:----------|:----|
-| constructor | -- | Useful for defining an initial state |
-| onMounted | after the first render | Useful for the realization of asynchronous calls or subscription of events |
-| onUpdate(props:Object) | Each time a property associated with `static get props` is modified | If this method returns `false` it prevents rendering |
-| onUpdated | After the render execution | It is recommended to analyze the state of the dom, after each update |
-| onUnmounted | After the component has been removed from the document | Useful for the elimination of global events |
+| `constructor` | -- | Useful for defining an initial state |
+| `onMounted` | after the first render | Useful for the realization of asynchronous calls or subscription of events |
+| `onUpdate(props:Object)` | Each time a property associated with `static get props` is modified | If this method returns `false` it prevents rendering |
+| `onUpdated` | After the render execution | It is recommended to analyze the state of the dom, after each update |
+| `onUnmounted` | After the component has been removed from the document | Useful for the elimination of global events |
 
 ## Element
 
@@ -129,7 +128,6 @@ constructor(){
 }
 ```
 
-
 ### preventRender
 
 Atomico uses an asynchronous render, every time a render is executed it is defined as true `this.preventRender`, this prevents the render function from being used again. You can define it as true to avoid rendering the view again.
@@ -141,7 +139,6 @@ By using `this.content`, you will get the node that encapsulates the content wit
 ### slots
 
 The slots property, stores the nodes taken at the time of component mount you can create your own slot manually associating index to an HTMLELement.
-
 
 ### setAttribute
 
