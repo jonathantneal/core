@@ -140,14 +140,31 @@ Mediante el uso de `this.content`, ud obtendrá el nodo que encapsula el conteni
 
 La propiedad slots, almacena los nodos tomados al momento del montaje del componente ud puede crear sus propios slot de forma manual asociando índice a un HTMLELement.
 
-### setAttribute
+### setAttribute(name:string,value:any)
 
 Atomico capta el uso de setAttribute, asociado al componente, para así enviar a `setProperties`, el objeto de actualización, sólo si el índice coincide con una propiedad de `static get props`
 
 ```js
 document.querySelector("my-tag").setAttribute("my-prop",{});
 ```
+
 La mayor ventaja del uso de `setAttribute` es el traspaso en **raw** del valor asociado la propiedad.
+
+### setProperties(props:Object)
+
+Este método se ejecutado por Atomico al momento de mutar una propiedad observada sea por `setAttribute` o `attributeChangedCallback`
+
+### setState(state:Object)
+
+Este método permite actualizar la vista a base de un nuevo estado, este siempre debe recibir un objeto como primer parámetro.
+
+### is
+
+Posee el nombre del tag
+
+### props
+
+Posee las propiedades asociadas al componente
 
 ### Contextos
 

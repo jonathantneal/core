@@ -152,6 +152,22 @@ document.querySelector("my-tag").setAttribute("my-prop",{});
 ```
 The biggest advantage of using `setAttribute` is the transfer in **raw** of the value associated with the property.
 
+### setProperties(props:Object)
+
+This method is executed by Atomico when mutating a property observed either by `setAttribute` or `attributeChangedCallback`
+
+### setState(state:Object)
+
+This method allows you to update the view based on a new state, this must always receive an object as the first parameter.
+
+### is
+
+It has the name of the tag
+
+### props
+
+It has the properties associated with the component
+
 ### Contextos
 
 Using the `getContext` method, the diff process recovers the return to share a context between components.
