@@ -139,7 +139,7 @@ Mediante el uso de `this.content`, ud obtendrá el nodo que encapsula el conteni
 
 La propiedad slots, almacena los nodos tomados al momento del montaje del componente ud puede crear sus propios slot de forma manual asociando índice a un HTMLELement.
 
-### setAttribute(name:string,value:any)
+### setAttribute(name:string, value:any)
 
 Atomico capta el uso de setAttribute, asociado al componente, para así enviar a `setProperties`, el objeto de actualización, sólo si el índice coincide con una propiedad de `static get props`
 
@@ -180,6 +180,9 @@ render(){
 
 > El contexto puede ser cualquier valor que apruebe la siguiente expresión `getContext(context)||context`;
 
+### dispatch(type:string, detail:?any)
+
+Permite despachar un custom-event, desde el componente.
 
 ## Instalacion
 

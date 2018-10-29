@@ -180,6 +180,10 @@ render(){
 
 > The context can be any value that approves the following expression `getContext (context) || context`.
 
+### dispatch(type:string, detail:?any)
+
+It allows to dispatch a custom-event, from the component.
+
 ## Installation
 
 ### Instalacion de bone-cli
