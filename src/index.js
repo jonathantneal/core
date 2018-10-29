@@ -91,6 +91,9 @@ export class Element extends HTMLElement {
     attributeChangedCallback(index, prev, next) {
         if (prev !== next) this.setProperties({ [index]: next });
     }
+    dispatch(type, detail) {
+        this.dispatchEvent(new CustomEvent(type, { detail }));
+    }
     getContext() {}
     onMounted() {}
     onUpdate() {}
