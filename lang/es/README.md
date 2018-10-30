@@ -184,6 +184,22 @@ render(){
 
 Permite despachar un custom-event, desde el componente.
 
+## Atomico vs Stencil vs Lit
+
+Stencil y Lit son buenas librería para la gestión del contenido al interior del de web-component, pero ignora el elemento más importante del web-component, el mismo web-component, Stencil y Lit ignora el estado de la etiqueta principal solo para preocuparse los los nodos hijos, a mi juicio el web-component comienza desde la etiqueta principal, ud podría requerir añadir estilos o eventos a la etiqueta de raíz ¿Como logra eso con Stencil o Lit?.
+
+Atomico permite manipular el mismo web-component desde render, mediante el uso del tag `<host/>` en honor a la propiedad css `:host`.
+
+```js
+render(){
+   <host click={()=>{
+       console.log(this.is+" make click!");
+   }}/>
+}
+```
+
+Otra diferencia es que atomico soporta contextos, esto es útil si se busca poseer tag anidados dentro de uno principal y compartir estados indiferente a su profundidad.
+
 ## Instalacion
 
 ### Instalacion de bone-cli
