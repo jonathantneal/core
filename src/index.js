@@ -1,7 +1,7 @@
-import { h, diff, isVDom, Collect, Context } from "atomico-diff";
+import { h, diff, isVDom, Collect, Context } from "./diff";
 import { getProps, defer, camelCase } from "./utils";
 
-export { h } from "atomico-diff";
+export { h } from "./diff";
 
 export class Element extends HTMLElement {
     constructor() {
