@@ -1,4 +1,4 @@
-import { h, Element } from "../dist/atomico.m";
+import { h, Element } from "../src";
 
 describe("Context", () => {
     it("Context", done => {
