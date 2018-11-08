@@ -1,6 +1,6 @@
 import { ELEMENT_MASTER, ELEMENT_COLLECT, ELEMENT_CONTEXT } from "./constants";
-import { remove, append, replace } from "./dom";
-import { VDom, h, isDom } from "./vdom";
+import { remove, append, replace, root } from "./dom";
+import { VDom, h, isDom, isVDom } from "./vdom";
 /**
  * Analyze if prev Node has or does not have a state defined by the diff process,
  * this is left linked to the node to avoid its loss either by external editing.
@@ -20,85 +20,83 @@ export function diff(parent, prevNode, next, slots = {}, context, isSvg) {
         nextNode = prevNode,
         nextMaster = next;
 
-    if (next) {
-        let isSlot = next.tag === "slot";
+    let isSlot = next.tag === "slot";
 
-        next = slot(next, slots);
-        prev = slot(prev, slots);
+    next = slot(next, slots);
+    prev = slot(prev, slots);
 
-        isSvg = isSvg || next.tag === "svg";
+    isSvg = isSvg || next.tag === "svg";
 
-        if (parent) {
-            if (prev.tag !== next.tag) {
-                nextNode = isDom(next.tag)
-                    ? next.tag
-                    : next.tag
-                        ? isSvg
-                            ? document.createElementNS(
-                                  "http://www.w3.org/2000/svg",
-                                  next.tag
-                              )
-                            : document.createElement(next.tag)
-                        : document.createTextNode("");
-                if (prevNode) {
-                    replace(parent, nextNode, prevNode);
-                    while (!isSlot && !next.collect && prevNode.firstChild) {
-                        append(nextNode, prevNode.firstChild);
-                    }
-                } else {
-                    append(parent, nextNode);
+    if (parent) {
+        if (prev.tag !== next.tag) {
+            nextNode = isDom(next.tag)
+                ? next.tag
+                : next.tag
+                ? isSvg
+                    ? document.createElementNS(
+                          "http://www.w3.org/2000/svg",
+                          next.tag
+                      )
+                    : document.createElement(next.tag)
+                : document.createTextNode("");
+            if (prevNode) {
+                replace(parent, nextNode, prevNode);
+                let length = next.children.length;
+                while (!isSlot && !next.collect && prevNode.firstChild) {
+                    if (length--) return;
+                    append(nextNode, prevNode.firstChild);
                 }
+            } else {
+                append(parent, nextNode);
             }
         }
+    }
 
-        if (nextNode.nodeType === 3) {
-            if (prev.children[0] !== next.children[0])
-                nextNode.textContent = next.children[0];
+    if (!next.tag) {
+        if (prev.children[0] !== next.children[0])
+            nextNode.textContent = next.children[0];
+    } else {
+        if (nextNode && nextNode[ELEMENT_CONTEXT]) {
+            context = nextNode[ELEMENT_CONTEXT](context);
+        }
+        let collect = (parent && nextNode[ELEMENT_COLLECT]) || {},
+            props = diffProps(
+                nextNode,
+                next.tag === prev.tag ? prev.props : {},
+                next.props,
+                isSvg,
+                /**
+                 * It allows to obtain properties of the iteration of diff by properties
+                 */
+                collect.props
+            );
+        if (collect.handler) {
+            props.children = next.children.map(vdom =>
+                vdom.tag ? vdom : vdom.children[0]
+            );
+            collect.handler(props);
         } else {
-            if (nextNode && nextNode[ELEMENT_CONTEXT]) {
-                context = nextNode[ELEMENT_CONTEXT](context);
-            }
-            let collect = (parent && nextNode[ELEMENT_COLLECT]) || {},
-                props = diffProps(
-                    nextNode,
-                    next.tag === prev.tag ? prev.props : {},
-                    next.props,
-                    isSvg,
-                    /**
-                     * It allows to obtain properties of the iteration of diff by properties
-                     */
-                    collect.props
-                );
-            if (collect.handler) {
-                props.children = next.children.map(
-                    vdom => (vdom.tag ? vdom : vdom.children[0])
-                );
-                collect.handler(props);
-            } else {
-                if (!isSlot && nextNode) {
-                    let children = Array.from(
-                            (nextNode.shadowRoot || nextNode).childNodes
-                        ),
-                        length = Math.max(
-                            children.length,
-                            next.children.length
-                        );
-                    for (let i = 0; i < length; i++) {
+            if (!isSlot && nextNode) {
+                let childNodes = Array.from(root(nextNode).childNodes),
+                    children = next.children,
+                    length = Math.max(children.length, next.children.length);
+                for (let i = 0; i < length; i++) {
+                    if (children[i]) {
                         diff(
                             nextNode,
+                            childNodes[i],
                             children[i],
-                            next.children[i],
                             slots,
                             context,
                             isSvg
                         );
+                        continue;
+                    }
+                    if (childNodes[i]) {
+                        remove(parent, childNodes[i]);
                     }
                 }
             }
-        }
-    } else {
-        if (parent && prevNode) {
-            remove(parent, prevNode);
         }
     }
     nextNode[ELEMENT_MASTER] = branch.set(parent, nextMaster);
