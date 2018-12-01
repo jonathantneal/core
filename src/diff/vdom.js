@@ -25,18 +25,13 @@ export class VDom {
         return new VDom(tag, { ...props }, children);
     }
 }
-export function isDom(tag) {
-    return tag !== null && typeof tag === "object" && tag.nodeType !== 11
-        ? true
-        : false;
-}
 /**
  *
  * @param {*} value
  * @return {Boolean}
  */
 export function isVDom(value) {
-    return typeof value === "object" && value instanceof VDom;
+    return value instanceof VDom;
 }
 /**
  * prepares the children associated with virtual dom, managing to simplify the algorithm of diff
@@ -44,14 +39,10 @@ export function isVDom(value) {
  * @param {*} merge - array that concatenates all the children independent of the depth of the array
  * @return {Array}
  */
-export function concat(children, merge = []) {
+export function concat(children, next = []) {
     for (let i = 0; i < children.length; i++) {
-        let child = children[i];
-        Array.isArray(child)
-            ? concat(child, merge)
-            : merge.push(
-                  isVDom(child) ? child : new VDom("", {}, [child || ""])
-              );
+        let value = children[i];
+        Array.isArray(value) ? concat(value, next) : next.push(value);
     }
-    return merge;
+    return next;
 }

@@ -1,17 +1,22 @@
 import { h, Element } from "../src";
 
+let count = 0;
+function tagName() {
+    return "tag-" + count++;
+}
+
 describe("Lifecycle", () => {
     /**
      * Verify the execution of aMounted once the first
      * render of the component has been executed
      */
     it("onMounted", done => {
-        let tagName = "test-1";
+        let localName = tagName();
         customElements.define(
-            tagName,
+            localName,
             class extends Element {
                 onMounted() {
-                    assert.equal(this.content.innerHTML, `<div>hola!</div>`);
+                    expect(this.innerHTML).to.equal(`<div>hola!</div>`);
                     done();
                 }
                 render() {
@@ -20,127 +25,96 @@ describe("Lifecycle", () => {
             }
         );
 
-        let tag = document.createElement(tagName);
+        let tag = document.createElement(localName);
 
         document.body.appendChild(tag);
     });
     /**
-     * Verify that onUpdate is running before the component update
+     * Verify the execution of aMounted once the first
+     * render of the component has been executed
      */
-    it("onUpdate", done => {
-        let tagName = "test-2";
+    it("onUpdate property", done => {
+        let localName = tagName(),
+            sampleProp = "...";
+
         customElements.define(
-            tagName,
+            localName,
             class extends Element {
                 static get props() {
-                    return ["property"];
+                    return ["sample-prop"];
                 }
                 onMounted() {
-                    this.setAttribute("property", 10);
-                }
-                onUpdate() {
-                    assert.equal(this.content.innerHTML, `<div></div>`);
+                    expect(this.sampleProp).to.equal(sampleProp);
                     done();
                 }
                 render() {
-                    return <div>{this.props.property}</div>;
+                    return <div>hola!</div>;
                 }
             }
         );
 
-        let tag = document.createElement(tagName);
+        let tag = document.createElement(localName);
 
+        tag.sampleProp = sampleProp;
         document.body.appendChild(tag);
     });
+
     /**
-     * Compare the update of the component,
-     * comparing it with the expected state
+     * Verify the execution of aMounted once the first
+     * render of the component has been executed
      */
-    it("onUpdated", done => {
-        let tagName = "test-3";
+    it("onUpdated property", done => {
+        let localName = tagName(),
+            sampleProp = "...";
+
         customElements.define(
-            tagName,
+            localName,
             class extends Element {
                 static get props() {
-                    return ["property"];
+                    return ["sample-prop"];
                 }
                 onMounted() {
-                    this.setAttribute("property", 10);
+                    this.sampleProp = sampleProp;
                 }
                 onUpdated() {
-                    assert.equal(
-                        this.content.innerHTML,
-                        `<div>${this.props.property}</div>`
-                    );
+                    expect(this.innerHTML).to.equal(`<div>hola! ...</div>`);
                     done();
                 }
                 render() {
-                    return <div>{this.props.property}</div>;
+                    return <div>hola! {this.sampleProp}</div>;
                 }
             }
         );
 
-        let tag = document.createElement(tagName);
+        let tag = document.createElement(localName);
 
         document.body.appendChild(tag);
     });
-    /**
-     * This test verifies that onUpdate prevents the
-     * execution of setState, by returning false.
-     */
-    it("prevent onUpdate", done => {
-        let tagName = "test-4";
+
+    it("onUnmount", done => {
+        let localName = tagName(),
+            sampleProp = "...";
+
         customElements.define(
-            tagName,
+            localName,
             class extends Element {
                 static get props() {
-                    return ["property"];
+                    return ["sample-prop"];
                 }
                 onMounted() {
-                    this.setAttribute("property", 10);
-                }
-                onUpdate() {
-                    setTimeout(() => {
-                        assert.equal(this.content.innerHTML, `<div></div>`);
-                        done();
-                    });
-                    return false;
-                }
-                render() {
-                    return <div>{this.props.property}</div>;
-                }
-            }
-        );
-
-        let tag = document.createElement(tagName);
-
-        document.body.appendChild(tag);
-    });
-    /**
-     * This test verifies that onUpdate prevents the
-     * execution of setState, by returning false.
-     */
-    it("prevent onUnmounted", done => {
-        let tagName = "test-5";
-        customElements.define(
-            tagName,
-            class extends Element {
-                static get props() {
-                    return ["property"];
+                    this.remove();
                 }
                 onUnmounted() {
                     done();
                 }
                 render() {
-                    return <div>{this.props.property}</div>;
+                    return <div>hola! {this.sampleProp}</div>;
                 }
             }
         );
 
-        let tag = document.createElement(tagName);
+        let tag = document.createElement(localName);
 
         document.body.appendChild(tag);
-
-        document.body.removeChild(tag);
     });
 });

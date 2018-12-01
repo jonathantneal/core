@@ -1,110 +1,84 @@
 <img src="brand/logo.png" width="280px"/>
-<br/>
 
-A small library to create web-components based on JSX, [See Installation](#Installation).
-
+A small library of **1.7kB** to create web-components based on **VIRTUAL-DOM**, **JSX** and **WEB-COMPONENTS**, with a minimum size.
 
 ```js
 import { h, Element } from "atomico";
 
 customElements.define(
-    "my-tag",
-    class extends Element {
+    "my-button",
+    class Tag extends Element {
         render() {
-            return (
-                <host
-                    click={() => {
-                        this.setState({
-                            toggle: !this.state.toggle
-                        });
-                    }}
-                >
-                    {this.state.toggle ? "🚀" : "🔥"}
-                </host>
-            );
+            return <button>my-button</button>;
         }
     }
 );
 ```
 
-## Observe properties
 
-You can listen to certain properties associated with your component, each time you update one of these properties the `onUpdate` method will be called.
 
-You can use an array to define which properties you will observe.
+### Índice
+
+- [Reactive properties](#Reactive properties)
+- [Properties as an event](#Properties as an event)
+- [Lifecycle](#Lifecycle)
+- [Shado dom](#Shado dom)
+- [Tag `<host/>`](#Tag `<host/>`)
+- [Installation](#Installation)
+
+## Reactive properties
+
+The reactivity in Atomico, depends on the method `static get props`, it must return an array or an object of reactive properties, these will be defined as properties of the component.
+
+#### Example array
+
+The array allows you to observe but not manipulate these properties.
 
 ```js
 static get props(){
-    return [
-        "property-one", // this.props.propertyOne
-        "property-two"  // this.props.propertyTwo
-    ]
+    return ["my-property"]
 }
 ```
 
-You can use an object to define which properties you will observe, each property will be associated with a function, this function will be executed when defining the property.
+#### Example object	
+
+By using the object you can manipulate the definition of properties.
 
 ```js
-static get props(){
+static get properties(){
     return {
-        "property-one":Number, // this.props.propertyOne
-        "property-two":String,  // this.props.propertyTwo
-        "property-json":JSON.parse // this.props.propertyJson
+        myProperty(next,prev){
+            return next;
+        }
     }
 }
 ```
 
-## Atomico ❤️ JSX
-
-If you are looking to work with Atomico, you have previously commented on interesting elements of Atomico's virtual-dom.
-
-### Property as events
-
-If a property of the tag has been defined as a function, it will be registered as an event.
+These properties are associated with the element, so you can manipulate the element externally, as taught in the following example:
 
 ```js
-render(){
-  return <button click={this.handlerClick}>🤷</button>
-}
+// example 1
+document.querySelector("my-tag").myProperty = true;
+// example 2
+document.querySelector("my-tag").setProperty("my-property",true);
 ```
-> This is useful if you want to work with custom-events, since Atomico does not change in the name of the event.
 
-### Tag Slot
+>  The new status of the property must be different from the previous one, to dispatch the update.
 
-The tag `<slot name ="any"/>`, allows you to interact with real nodes, by default Atomico obtains the slot when mount the component.
+## Properties as an event
 
-```html
-<my-tag>
-    <img slot="image"/>
-</my-tag>
-```
-You can interact with these slot through virtual-dom
-```js
-render(){
-  return <slot name="image" src="my-image.jpg" click={this.handlerClick}/>
-}
-```
->The interaction of Atomico is only limited to the definition of properties.
-
-### Tag host
-
-The `<host/>` tag represents the same component, this is useful for manipulating the state of the root label.
+The definition of the event does not depend on a prefix, but rather on the type, you can define a property of the tag as an event by defining it as a function.
 
 ```js
-render(){
-  return <host style={{background:"black",color:"white",display:"block"}}>
-      {this.is}
-  </host>
-}
+<button
+    click={() => {
+        this.myProperty = true;
+    }}
+>
+    ...
+</button>;
 ```
 
-### Additional remarks
-
-The Virtual-dom of Atomico does not support:
-
-1. **ref**: You can use `this.content.querySelector("selector")`, to achieve a similar effect.
-2. **key**: Although some consider it a good practice to use key in list management, as the author of Atomico, I do not consider them to be of frequent use to provide support within Atomico.
-3. **fragments**: `</>` You will not need to use fragments since the web-component is and will always be its root.
 
 ## Lifecycle
 
@@ -112,93 +86,49 @@ The Virtual-dom of Atomico does not support:
 |:-------|:----------|:----|
 | `constructor` | -- | Useful for defining an initial state |
 | `onMounted` | after the first render | Useful for the realization of asynchronous calls or subscription of events |
-| `onUpdate(props:Object)` | Each time a property associated with `static get props` is modified | If this method returns `false` it prevents rendering |
 | `onUpdated` | After the render execution | It is recommended to analyze the state of the dom, after each update |
 | `onUnmounted` | After the component has been removed from the document | Useful for the elimination of global events |
 
-## Element
 
-### Shadow-dom
+## Shado dom
 
-By default Atomico works on the shadow-dom whenever you enable it.
+
+The use of shadow dom, allows the use of `<slot>` to enable shadow DOM, just enable it in the constructor, as the following example shows.
 
 ```js
 constructor(){
-  this.attachShadow({mode:"open"});
+    this.attachShadow({mode:"open"});
 }
 ```
 
-### preventRender
-
-Atomico uses an asynchronous render, every time a render is executed it is defined as true `this.preventRender`, this prevents the render function from being used again. You can define it as true to avoid rendering the view again.
-
-### content
-
-By using `this.content`, you will get the node that encapsulates the content within the component.
-
-### slots
-
-The slots property, stores the nodes taken at the time of component mount you can create your own slot manually associating index to an HTMLELement.
-
-### setAttribute
-
-Atomico captures the use of setAttribute, associated with the component, to send the update object to `setProperties`, only if the index matches a property of` static get props`
-
-```js
-document.querySelector("my-tag").setAttribute("my-prop",{});
-```
-The biggest advantage of using `setAttribute` is the transfer in **raw** of the value associated with the property.
-
-### setProperties(props:Object)
-
-This method is executed by Atomico when mutating a property observed either by `setAttribute` or `attributeChangedCallback`
-
-### setState(state:Object)
-
-This method allows you to update the view based on a new state, this must always receive an object as the first parameter.
-
-### is
-
-It has the name of the tag
-
-### props
-
-It has the properties associated with the component
-
-### Contextos
-
-Using the `getContext` method, the diff process recovers the return to share a context between components.
-
-```js
-getContext(context = {}){
-   return {...context,message:"context!"};
-}
-render(){
-    return <h1>{this.context.message}</h1>
-}
-```
-
-> The context can be any value that approves the following expression `getContext (context) || context`.
-
-### dispatch(type:string, detail:?any)
-
-It allows to dispatch a custom-event, from the component.
-
-## Atomico vs Stencil vs Lit
-
-Stencil and Lit are good library for content management within the web-component, but ignores the most important element of the web-component, the same web-component, Stencil and Lit ignores the status of the main label only to worry about the the child nodes, in my opinion the web-component starts from the main label, you may need to add styles or events to the root label How do you achieve that with Stencil or Lit ?.
-
-Atomico allows you to manipulate the same web-component from render, by using the tag `<host />` in honor of the property css `: host`.
+Another benefit of shadow-dom is the independence of style, you can use this benefit as the following example shows:
 
 ```js
 render(){
-   <host click={()=>{
-       console.log(this.is+" make click!");
-   }}/>
-}
+	return <host>
+        <style>{style}</style>	
+    	<slot/>
+    </host>
+}	
 ```
 
-Another difference is that Atomico supports contexts, this is useful if you want to have nested tags inside a main one and share states regardless of their depth.
+> Note the use of `<host />`, this is a virtual tag that points directly to the web-component as a tag.
+
+## Tag `<host/>`
+
+This tag allows you to manipulate the state of the component, whether to add events, modify properties or others.
+
+```js
+render() {
+    return (
+        <host
+        	style={{ color: this.color }}
+    		click={() => this.color = "orange"}>
+            	<slot />
+		</host>
+	);
+}
+```
 
 ## Installation
 

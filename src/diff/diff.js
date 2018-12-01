@@ -1,6 +1,21 @@
-import { ELEMENT_MASTER, ELEMENT_COLLECT, ELEMENT_CONTEXT } from "./constants";
-import { remove, append, replace, root } from "./dom";
-import { VDom, h, isDom, isVDom } from "./vdom";
+import { remove, append, replace, create } from "./dom";
+import { VDom, h, isVDom } from "./vdom";
+
+export let PREVIOUS = "__PREVIOUS__";
+export let LISTENERS = "__LISTENERS__";
+
+export function createRender(root) {
+    let localName = root.tagName.toLowerCase();
+    root[PREVIOUS] = h(localName);
+    return next => {
+        if (isVDom(next) && next.tag === "host") {
+            next = next.clone(localName);
+        } else {
+            next = h(localName, {}, next);
+        }
+        diff(root, root, root, next);
+    };
+}
 /**
  * Analyze if prev Node has or does not have a state defined by the diff process,
  * this is left linked to the node to avoid its loss either by external editing.
@@ -14,103 +29,73 @@ import { VDom, h, isDom, isVDom } from "./vdom";
  * @param {Boolean} svg - define if the html element is a svg
  * @return {HTMLELement} - returns the current node.
  */
-export function diff(parent, prevNode, next, slots = {}, context, isSvg) {
-    let branch = (prevNode && prevNode[ELEMENT_MASTER]) || new Map(),
-        prev = branch.get(parent) || new VDom(),
-        nextNode = prevNode,
-        nextMaster = next;
 
-    let isSlot = next.tag === "slot";
+export function diff(root, parent, node, next, isSvg, deep) {
+    let prev = (node && node[PREVIOUS]) || new VDom(),
+        base = node;
 
-    next = slot(next, slots);
-    prev = slot(prev, slots);
+    if (next && typeof next.tag === "function") {
+        next = next.tag({ ...next.props, children: next.children });
+    }
 
-    isSvg = isSvg || next.tag === "svg";
+    if (!(next instanceof VDom)) {
+        next = new VDom("", {}, next);
+    }
 
-    if (parent) {
-        if (prev.tag !== next.tag) {
-            nextNode = isDom(next.tag)
-                ? next.tag
-                : next.tag
-                ? isSvg
-                    ? document.createElementNS(
-                          "http://www.w3.org/2000/svg",
-                          next.tag
-                      )
-                    : document.createElement(next.tag)
-                : document.createTextNode("");
-            if (prevNode) {
-                replace(parent, nextNode, prevNode);
+    if (prev.tag !== next.tag) {
+        base = create(next.tag, isSvg);
+        if (node) {
+            if (next.tag !== "") {
                 let length = next.children.length;
-                while (!isSlot && !next.collect && prevNode.firstChild) {
-                    if (length--) return;
-                    append(nextNode, prevNode.firstChild);
+                while (node.firstChild) {
+                    if (!length--) break;
+                    append(base, node.firstChild);
                 }
-            } else {
-                append(parent, nextNode);
             }
-        }
-    }
-
-    if (!next.tag) {
-        if (prev.children[0] !== next.children[0])
-            nextNode.textContent = next.children[0];
-    } else {
-        if (nextNode && nextNode[ELEMENT_CONTEXT]) {
-            context = nextNode[ELEMENT_CONTEXT](context);
-        }
-        let collect = (parent && nextNode[ELEMENT_COLLECT]) || {},
-            props = diffProps(
-                nextNode,
-                next.tag === prev.tag ? prev.props : {},
-                next.props,
-                isSvg,
-                /**
-                 * It allows to obtain properties of the iteration of diff by properties
-                 */
-                collect.props
-            );
-        if (collect.handler) {
-            props.children = next.children.map(vdom =>
-                vdom.tag ? vdom : vdom.children[0]
-            );
-            collect.handler(props);
+            replace(parent, base, node);
         } else {
-            if (!isSlot && nextNode) {
-                let childNodes = Array.from(root(nextNode).childNodes),
-                    children = next.children,
-                    length = Math.max(children.length, next.children.length);
-                for (let i = 0; i < length; i++) {
-                    if (children[i]) {
-                        diff(
-                            nextNode,
-                            childNodes[i],
-                            children[i],
-                            slots,
-                            context,
-                            isSvg
-                        );
-                        continue;
-                    }
-                    if (childNodes[i]) {
-                        remove(parent, childNodes[i]);
-                    }
+            append(parent, base);
+        }
+    }
+    if (next.tag) {
+        diffProps(
+            base,
+            prev.tag === next.tag ? prev.props : {},
+            next.props,
+            isSvg
+        );
+        if (next.tag === "slot") {
+            let name = next.props.name;
+        } else {
+            let nextBase = deep ? base : base.shadowRoot || base,
+                childNodes = nextBase.childNodes,
+                children = next.children,
+                move = 0,
+                length = Math.max(children.length, childNodes.length);
+            for (let i = 0; i < length; i++) {
+                let childI = i - move;
+                if (i in children) {
+                    diff(
+                        root,
+                        nextBase,
+                        childNodes[childI],
+                        children[i],
+                        isSvg,
+                        deep + 1
+                    );
+                } else {
+                    remove(nextBase, childNodes[childI]);
+                    move++;
                 }
             }
         }
+    } else {
+        if (prev.children !== next.children) {
+            base.textContent = next.children;
+        }
     }
-    nextNode[ELEMENT_MASTER] = branch.set(parent, nextMaster);
-    return nextNode;
-}
-
-export function Collect(node, props, handler) {
-    this.observer = node[ELEMENT_COLLECT] = { props, handler };
-}
-
-export function Context(node, handler, prop = "context") {
-    node[ELEMENT_CONTEXT] = context => {
-        return (node[prop] = handler(context) || context);
-    };
+    base[PREVIOUS] = next;
+    return base;
 }
 
 /**
@@ -125,75 +110,71 @@ export function Context(node, handler, prop = "context") {
  * @param {Boolean} [nextMerge] - it allows not to eliminate the properties of the previous state and add them to the next state
  * @return {Object} Collected properties
  */
-function diffProps(node, prev, next, isSvg, collect) {
-    // generates a list of the existing attributes in both versions
-    let keys = Object.keys(prev).concat(Object.keys(next)),
-        length = keys.length,
-        props = {};
-    for (let i = 0; i < length; i++) {
+function diffProps(node, prev, next, isSvg) {
+    let prevKeys = Object.keys(prev),
+        nextKeys = Object.keys(next),
+        keys = prevKeys.concat(nextKeys),
+        define = {};
+
+    for (let i = 0; i < keys.length; i++) {
         let prop = keys[i];
 
-        if (isSvg && prop === "xmlns") continue;
-        if (prev[prop] !== next[prop]) {
-            if (collect && collect.indexOf(prop) > -1) {
-                props[prop] = next[prop];
-                continue;
+        if (define[prop] || prev[prop] === next[prop]) continue;
+
+        define[prop] = true;
+
+        let isFnPrev = typeof prev[prop] === "function",
+            isFnNext = typeof next[prop] === "function";
+
+        if (isFnPrev || isFnNext) {
+            if (!isFnNext && isFnPrev) {
+                node.removeEventListener(prop, node[LISTENERS][prop][0]);
             }
-
-            let isFnNext = typeof next[prop] === "function",
-                isFnPrev = typeof prev[prop] === "function";
-
-            if (isFnNext || isFnPrev) {
-                if (isFnPrev) node.removeEventListener(prop, prev[prop]);
-                if (isFnNext) node.addEventListener(prop, next[prop]);
-            } else if (prop in next) {
-                if ((prop in node && !isSvg) || (isSvg && prop === "style")) {
-                    if (prop === "style") {
-                        if (typeof next[prop] === "object") {
-                            let prevStyle = prev[prop] || {},
-                                nextStyle = next[prop];
-                            for (let prop in nextStyle) {
-                                if (prevStyle[prop] !== nextStyle[prop]) {
-                                    if (prop[0] === "-") {
-                                        node.setProperty(prop, nextStyle[prop]);
-                                    } else {
-                                        node.style[prop] = nextStyle[prop];
-                                    }
+            if (isFnNext) {
+                if (!isFnPrev) {
+                    node[LISTENERS] = node[LISTENERS] || {};
+                    if (!node[LISTENERS][prop]) {
+                        node[LISTENERS][prop] = [
+                            event => {
+                                node[LISTENERS][prop][1](event);
+                            }
+                        ];
+                    }
+                    node.addEventListener(prop, node[LISTENERS][prop][0]);
+                }
+                node[LISTENERS][prop][1] = next[prop];
+            }
+        } else if (prop in next) {
+            if ((prop in node && !isSvg) || (isSvg && prop === "style")) {
+                if (prop === "style") {
+                    if (typeof next[prop] === "object") {
+                        let prevStyle = prev[prop] || {},
+                            nextStyle = next[prop];
+                        for (let prop in nextStyle) {
+                            if (prevStyle[prop] !== nextStyle[prop]) {
+                                if (prop[0] === "-") {
+                                    node.style.setProperty(
+                                        prop,
+                                        nextStyle[prop]
+                                    );
+                                } else {
+                                    node.style[prop] = nextStyle[prop];
                                 }
                             }
-                            next[prop] = { ...prevStyle, ...nextStyle };
-                        } else {
-                            node.style.cssText = next[prop];
                         }
                     } else {
-                        node[prop] = next[prop];
+                        node.style.cssText = next[prop];
                     }
                 } else {
-                    isSvg
-                        ? node.setAttributeNS(null, prop, next[prop])
-                        : node.setAttribute(prop, next[prop]);
+                    node[prop] = next[prop];
                 }
             } else {
-                if (collect) {
-                    next[prop] = prev[prop];
-                } else {
-                    node.removeAttribute(prop);
-                }
+                isSvg
+                    ? node.setAttributeNS(null, prop, next[prop])
+                    : node.setAttribute(prop, next[prop]);
             }
+        } else {
+            node.removeAttribute(prop);
         }
     }
-    return props;
-}
-/**
- *
- * @param {VDom} vdom - It allows to identify if this node requires the use of a slot
- * @param {Object} slots - Object that has living nodes associated by an index
- */
-function slot(vdom, slots) {
-    if (vdom.tag === "slot") {
-        vdom = vdom.clone(slots[vdom.props.name] || "");
-        delete vdom.props.name;
-        return vdom;
-    }
-    return vdom;
 }

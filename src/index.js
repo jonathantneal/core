@@ -1,103 +1,124 @@
-import { h, diff, isVDom, Collect, Context } from "./diff";
-import { getProps, defer, camelCase } from "./utils";
+import { createRender } from "./diff";
+export { h, createRender } from "./diff";
 
-export { h } from "./diff";
+function camelCase(string) {
+    return string.replace(/-+([\w])/g, (all, letter) => letter.toUpperCase());
+}
+function unCamelCase(string) {
+    return string.replace(
+        /([^\-])([A-Z]+)/,
+        (all, before, after) => before + "-" + after.toLowerCase()
+    );
+}
+/**
+ * @param {object|array} props - allows you to generate an object that contains the props to be observed by the component and the type functions
+ * @return {object}
+ */
+function getProps(props) {
+    let isArray = Array.isArray(props),
+        keys = [],
+        types = {};
+    for (let key in props) {
+        let prop = unCamelCase(isArray ? props[key] : key);
+        if (isArray) {
+            keys.push(prop);
+        } else {
+            keys.push(prop);
+            types[prop] = props[key];
+            types[camelCase(key)] = props[key];
+        }
+    }
+    return {
+        keys,
+        types
+    };
+}
 
 export class Element extends HTMLElement {
     constructor() {
         super();
+
+        let render = createRender(this),
+            resolve;
+
         this.props = {};
-        this.slots = {};
-        this.state = {};
+        this.countRender = 0;
         this.preventRender = true;
-        this.is = this.nodeName.toLocaleLowerCase();
-        this._props = getProps(this.constructor.props);
-        new Collect(this, this._props.keys, props => this.setProperties(props));
-        new Context(this, context => this.getContext(context));
-    }
-    get content() {
-        return this.shadowRoot || this;
+        this.proxy = getProps(this.constructor.props);
+
+        this.load = () => {
+            this.preventRender = false;
+            resolve();
+        };
+
+        this.await = new Promise(load => (resolve = load));
+
+        this.rerender = state => {
+            if (this.preventRender) return;
+            this.preventRender = true;
+            Promise.resolve().then(() => {
+                render(this.render());
+                this.preventRender = false;
+                this.countRender++ ? this.onUpdated() : this.onMounted();
+            });
+        };
+
+        this.proxy.keys.forEach(key => {
+            key = camelCase(key);
+            Object.defineProperty(this, key, {
+                set(value) {
+                    this.setProps({ [key]: value });
+                },
+                get() {
+                    return this.props[key];
+                }
+            });
+        });
     }
     static get props() {
         return [];
     }
-    static get observedAttributes() {
-        return getProps(this.props).keys;
+    render() {}
+    onMounted() {}
+    onUpdated() {}
+    onUnmounted() {}
+    setProps(props) {
+        let nextProps = {},
+            nextRender;
+        for (let key in props) {
+            let prevValue = this.props[key];
+            if (props[key] !== prevValue) {
+                let type = this.proxy.types[key],
+                    nextValue = type ? type(props[key], prevValue) : props[key];
+                if (nextValue !== prevValue) {
+                    nextProps[key] = nextValue;
+                    nextRender = true;
+                }
+            }
+        }
+        if (nextRender) {
+            this.props = { ...this.props, ...nextProps };
+            this.rerender();
+        }
     }
     setAttribute(prop, value) {
-        if (this._props.keys.indexOf(prop) > -1) {
-            this.setProperties({ [prop]: value });
+        if (this.proxy.keys.indexOf(prop) > -1) {
+            this.setProps({ [camelCase(prop)]: value });
         } else {
             super.setAttribute(prop, value);
         }
     }
-    setProperties(props) {
-        let nextProps = {},
-            prevent = this.isMounted;
-        for (let prop in props) {
-            let type = this._props.types[prop],
-                value = props[prop],
-                index;
-            value = type ? type(value) : value;
-            index = camelCase(prop);
-            if (value !== this.props[index]) {
-                nextProps[index] = value;
-            }
-        }
-        if (Object.keys(nextProps).length) {
-            if (prevent) prevent = this.onUpdate(nextProps) !== false;
-            this.props = { ...this.props, ...nextProps };
-            if (prevent) this.setState({});
-        }
-    }
-    setState(state, watch) {
-        if (typeof state !== "object") return;
-        this.state = { ...this.state, ...state };
-        if (this.preventRender) return;
-        this.preventRender = true;
-        defer(() => {
-            let render = this.render();
-            render =
-                isVDom(render) && render.tag === "host"
-                    ? render
-                    : h("host", {}, render);
-
-            diff(false, this, render.clone(this.is), this.slots, this.context);
-            this.preventRender = false;
-            watch ? watch() : this.onUpdated();
-        });
+    static get observedAttributes() {
+        return getProps(this.props).keys;
     }
     connectedCallback() {
-        defer(() => {
-            let fragment = document.createDocumentFragment();
-            while (this.firstChild) {
-                let child = this.firstChild,
-                    slot = child.getAttribute && child.getAttribute("slot");
-                if (slot) {
-                    this.slots[slot] = child;
-                }
-                fragment.appendChild(child);
-            }
-            this.preventRender = false;
-            this.setState({}, () => {
-                this.isMounted = true;
-                this.onMounted();
-            });
-        });
+        this.load();
+        this.await.then(() => this.rerender());
     }
     disconnectedCallback() {
-        this.onUnmounted();
+        this.await.then(() => this.onUnmounted());
     }
-    attributeChangedCallback(index, prev, next) {
-        if (prev !== next) this.setProperties({ [index]: next });
+    attributeChangedCallback(name, prev, next) {
+        this.setProps({ [name]: next });
     }
-    dispatch(type, detail) {
-        this.dispatchEvent(new CustomEvent(type, { detail }));
-    }
-    getContext() {}
-    onMounted() {}
-    onUpdate() {}
-    onUnmounted() {}
-    onUpdated() {}
-    render() {}
 }
