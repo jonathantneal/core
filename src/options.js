@@ -1,3 +1,1 @@
-export let options = {
-    delay: 1
-};
+export let options = {};
