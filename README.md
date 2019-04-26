@@ -21,12 +21,12 @@ render(<Emoji />, document.querySelector("#app"));
 3. [Virtual-dom](#virtual-dom)
 4. [JSX](#jsx)
    1. [Logical conditions](#logical-conditions)
-   2. [Eventos](eventos)
+   2. [Events](events)
    3. [children](#children)
       1. [toList](#tolist)
-5. [components as functions](#componentes-como-funciones)
+5. [components as functions](#components-as-functions)
 6. [hooks](#hooks)
-   1. [Why hooks?](#why-hooks?)
+   1. [Why hooks?](#why-hooks)
    2. [useState](#usestate)
    3. [useEffect](#useeffect)
    4. [useReducer](#usereducer)
@@ -35,9 +35,9 @@ render(<Emoji />, document.querySelector("#app"));
    7. [useContext](#usecontext)
 7. [createContext](#createcontext)
 8. [Utilities](#utilities)
-   1. [@atomico/element](#@atomico/element)
-   2. [@atomico/store](#@atomico/store)
-9. [Example](#example)
+   1. [@atomico/element](#atomicoelement)
+   2. [@atomico/store](#store)
+9. [Examples](#examples)
 
 ## Installation
 
